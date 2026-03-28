@@ -1126,23 +1126,29 @@ body::before {
 /* ========== SAVING TICKER ========== */
 .ticker-bar {
   background: var(--amber-light);
-  padding: 12px 24px;
+  padding: 16px 24px;
   text-align: center;
-  font-size: .85rem;
-  color: var(--amber);
+  font-size: 1rem;
+  color: var(--text);
   font-weight: 600;
   position: relative;
   z-index: 1;
   overflow: hidden;
 }
+.ticker-bar .counter {
+  font-family: var(--font-mono);
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--green-deep);
+}
 .ticker-bar span {
   font-family: var(--font-mono);
 }
 .store-logo-img {
-  width: 48px;
-  height: 48px;
+  width: 56px;
+  height: 56px;
   object-fit: contain;
-  border-radius: 8px;
+  border-radius: 10px;
   transition: transform .3s;
 }
 .store-logo:hover .store-logo-img {
