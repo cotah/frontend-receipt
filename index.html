@@ -1,0 +1,1750 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SmartDocket — Compare Irish Grocery Prices & Save</title>
+<meta name="description" content="Scan your receipt, compare prices across Tesco, Lidl, Aldi, SuperValu and Dunnes. Save €40+/month on groceries. Free for Irish shoppers.">
+<meta property="og:title" content="SmartDocket — Compare Irish Grocery Prices & Save">
+<meta property="og:description" content="Scan your receipt, compare prices across Tesco, Lidl, Aldi, SuperValu and Dunnes. Save €40+/month on groceries. Free for Irish shoppers.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="/og-image.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect x='8' y='4' width='16' height='24' rx='2' fill='%231A4D35'/><line x1='12' y1='10' x2='20' y2='10' stroke='%23F7F5F0' stroke-width='1.5'/><line x1='12' y1='14' x2='18' y2='14' stroke='%23F7F5F0' stroke-width='1.5'/><line x1='12' y1='18' x2='20' y2='18' stroke='%23F7F5F0' stroke-width='1.5'/><circle cx='20' cy='22' r='4' fill='%233CB371'/><path d='M18 22l1.5 1.5L22 20' stroke='%23fff' stroke-width='1.2' fill='none'/></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=DM+Serif+Display:ital@0;1&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ========== RESET & BASE ========== */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --green-deep: #1A4D35;
+  --green-accent: #3CB371;
+  --green-light: #E8F5E9;
+  --amber: #E8A020;
+  --amber-light: #FFF3D6;
+  --bg: #F7F5F0;
+  --bg-warm: #F0EDE6;
+  --text: #1A1A1A;
+  --text-secondary: #6B7280;
+  --white: #FFFFFF;
+  --red-save: #D94B4B;
+  --border: #E5E2DB;
+  --shadow-sm: 0 1px 3px rgba(26,77,53,.06);
+  --shadow-md: 0 4px 16px rgba(26,77,53,.08);
+  --shadow-lg: 0 12px 40px rgba(26,77,53,.12);
+  --shadow-xl: 0 20px 60px rgba(26,77,53,.16);
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+  --radius-xl: 28px;
+  --font-display: 'DM Serif Display', Georgia, serif;
+  --font-body: 'DM Sans', -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', 'SF Mono', monospace;
+}
+
+html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
+
+body {
+  font-family: var(--font-body);
+  color: var(--text);
+  background: var(--bg);
+  line-height: 1.65;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+img { max-width: 100%; display: block; }
+a { color: inherit; text-decoration: none; }
+button { cursor: pointer; border: none; font-family: inherit; }
+
+/* ========== RECEIPT PAPER TEXTURE (Global) ========== */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background:
+    repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,.008) 2px, rgba(0,0,0,.008) 4px);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ========== SCROLL ANIMATION ========== */
+.reveal {
+  opacity: 0;
+  transform: translateY(32px);
+  transition: opacity .7s cubic-bezier(.22,1,.36,1), transform .7s cubic-bezier(.22,1,.36,1);
+}
+.reveal.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+.reveal-delay-1 { transition-delay: .1s; }
+.reveal-delay-2 { transition-delay: .2s; }
+.reveal-delay-3 { transition-delay: .3s; }
+.reveal-delay-4 { transition-delay: .4s; }
+
+/* ========== NAVIGATION ========== */
+.nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  padding: 0 24px;
+  transition: background .3s, box-shadow .3s, backdrop-filter .3s;
+}
+.nav.scrolled {
+  background: rgba(247,245,240,.88);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: 0 1px 0 var(--border);
+}
+.nav-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 68px;
+}
+.nav-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--font-display);
+  font-size: 1.35rem;
+  color: var(--green-deep);
+  letter-spacing: -.02em;
+}
+.nav-logo-icon {
+  width: 36px;
+  height: 36px;
+  background: var(--green-deep);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-family: var(--font-mono);
+  font-size: .85rem;
+  font-weight: 700;
+}
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+  list-style: none;
+}
+.nav-links a {
+  font-size: .9rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  transition: color .2s;
+}
+.nav-links a:hover { color: var(--green-deep); }
+.nav-cta {
+  background: var(--green-deep);
+  color: white !important;
+  padding: 10px 22px;
+  border-radius: 100px;
+  font-weight: 600;
+  font-size: .88rem;
+  transition: transform .2s, box-shadow .2s;
+}
+.nav-cta:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+.mobile-menu-btn {
+  display: none;
+  background: none;
+  width: 40px;
+  height: 40px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+}
+.mobile-menu-btn span {
+  width: 22px;
+  height: 2px;
+  background: var(--green-deep);
+  border-radius: 2px;
+  transition: .3s;
+}
+
+@media (max-width: 768px) {
+  .nav-links { display: none; }
+  .mobile-menu-btn { display: flex; }
+  .nav-links.open {
+    display: flex;
+    flex-direction: column;
+    position: absolute;
+    top: 68px;
+    left: 0;
+    right: 0;
+    background: rgba(247,245,240,.97);
+    backdrop-filter: blur(20px);
+    padding: 24px;
+    gap: 20px;
+    border-bottom: 1px solid var(--border);
+  }
+}
+
+/* ========== SECTION CONTAINERS ========== */
+.section {
+  position: relative;
+  z-index: 1;
+  padding: 100px 24px;
+}
+.section-inner {
+  max-width: 1100px;
+  margin: 0 auto;
+}
+.section-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-mono);
+  font-size: .72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .12em;
+  color: var(--green-accent);
+  margin-bottom: 20px;
+}
+.section-label::before {
+  content: '';
+  width: 20px;
+  height: 2px;
+  background: var(--green-accent);
+  border-radius: 2px;
+}
+.section-title {
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 4.5vw, 3.2rem);
+  line-height: 1.15;
+  color: var(--green-deep);
+  letter-spacing: -.025em;
+  max-width: 700px;
+}
+.section-subtitle {
+  font-size: 1.12rem;
+  color: var(--text-secondary);
+  max-width: 560px;
+  margin-top: 16px;
+  line-height: 1.7;
+}
+
+/* ========== HERO ========== */
+.hero {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  padding-top: 100px;
+  padding-bottom: 60px;
+  background:
+    radial-gradient(ellipse at 20% 80%, rgba(60,179,113,.07) 0%, transparent 60%),
+    radial-gradient(ellipse at 80% 20%, rgba(232,160,32,.05) 0%, transparent 60%),
+    var(--bg);
+  overflow: hidden;
+}
+.hero .section-inner {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 60px;
+  align-items: center;
+}
+.hero-content { max-width: 560px; }
+.hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--green-light);
+  color: var(--green-deep);
+  padding: 7px 16px;
+  border-radius: 100px;
+  font-size: .82rem;
+  font-weight: 600;
+  margin-bottom: 28px;
+}
+.hero-badge-dot {
+  width: 7px;
+  height: 7px;
+  background: var(--green-accent);
+  border-radius: 50%;
+  animation: pulse 2s infinite;
+}
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: .5; transform: scale(1.4); }
+}
+.hero h1 {
+  font-family: var(--font-display);
+  font-size: clamp(2.6rem, 5.5vw, 3.8rem);
+  line-height: 1.08;
+  color: var(--green-deep);
+  letter-spacing: -.03em;
+  margin-bottom: 22px;
+}
+.hero h1 em {
+  font-style: italic;
+  color: var(--green-accent);
+}
+.hero-sub {
+  font-size: 1.15rem;
+  color: var(--text-secondary);
+  line-height: 1.7;
+  margin-bottom: 36px;
+  max-width: 480px;
+}
+.hero-ctas {
+  display: flex;
+  gap: 14px;
+  margin-bottom: 32px;
+  flex-wrap: wrap;
+}
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--green-deep);
+  color: white;
+  padding: 15px 30px;
+  border-radius: 14px;
+  font-weight: 600;
+  font-size: 1rem;
+  transition: transform .2s, box-shadow .2s;
+}
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
+.btn-primary svg { width: 20px; height: 20px; }
+.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--white);
+  color: var(--green-deep);
+  padding: 15px 30px;
+  border-radius: 14px;
+  font-weight: 600;
+  font-size: 1rem;
+  border: 1.5px solid var(--border);
+  transition: transform .2s, box-shadow .2s, border-color .2s;
+}
+.btn-secondary:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+  border-color: var(--green-accent);
+}
+.hero-proof {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: .88rem;
+  color: var(--text-secondary);
+}
+.hero-proof-avatars {
+  display: flex;
+}
+.hero-proof-avatars span {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 2.5px solid var(--bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: .7rem;
+  font-weight: 700;
+  color: white;
+  margin-left: -8px;
+}
+.hero-proof-avatars span:first-child { margin-left: 0; }
+
+/* Hero receipt visual */
+.hero-visual {
+  position: relative;
+  display: flex;
+  justify-content: center;
+}
+.receipt-card {
+  background: white;
+  border-radius: 4px;
+  padding: 32px 28px;
+  max-width: 340px;
+  width: 100%;
+  box-shadow: var(--shadow-xl);
+  position: relative;
+  font-family: var(--font-mono);
+  font-size: .78rem;
+  border: 1px solid #eee;
+}
+.receipt-card::before {
+  content: '';
+  position: absolute;
+  top: -12px;
+  left: 0;
+  right: 0;
+  height: 12px;
+  background: url("data:image/svg+xml,%3Csvg viewBox='0 0 340 12' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0,12 Q8.5,0 17,12 Q25.5,0 34,12 Q42.5,0 51,12 Q59.5,0 68,12 Q76.5,0 85,12 Q93.5,0 102,12 Q110.5,0 119,12 Q127.5,0 136,12 Q144.5,0 153,12 Q161.5,0 170,12 Q178.5,0 187,12 Q195.5,0 204,12 Q212.5,0 221,12 Q229.5,0 238,12 Q246.5,0 255,12 Q263.5,0 272,12 Q280.5,0 289,12 Q297.5,0 306,12 Q314.5,0 323,12 Q331.5,0 340,12' fill='white' stroke='%23eee' stroke-width='.5'/%3E%3C/svg%3E") no-repeat;
+  background-size: 100% 100%;
+}
+.receipt-header {
+  text-align: center;
+  padding-bottom: 16px;
+  border-bottom: 1px dashed #ccc;
+  margin-bottom: 16px;
+}
+.receipt-store {
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 1rem;
+  color: var(--text);
+}
+.receipt-date {
+  color: var(--text-secondary);
+  font-size: .72rem;
+  margin-top: 4px;
+}
+.receipt-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: 6px 0;
+  gap: 8px;
+}
+.receipt-item-name {
+  color: var(--text);
+  flex: 1;
+}
+.receipt-item-price {
+  white-space: nowrap;
+  font-weight: 600;
+}
+.receipt-item-price.overpaid {
+  color: var(--red-save);
+  text-decoration: line-through;
+  text-decoration-color: var(--red-save);
+}
+.receipt-item-better {
+  font-size: .68rem;
+  color: var(--green-accent);
+  font-weight: 600;
+  text-align: right;
+  margin-top: 2px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  justify-content: flex-end;
+}
+.receipt-divider {
+  border: none;
+  border-top: 1px dashed #ccc;
+  margin: 14px 0;
+}
+.receipt-total {
+  display: flex;
+  justify-content: space-between;
+  font-weight: 700;
+  font-size: .92rem;
+  color: var(--text);
+  padding-top: 4px;
+}
+.receipt-savings {
+  background: var(--amber-light);
+  margin: 18px -28px -32px;
+  padding: 18px 28px 22px;
+  border-radius: 0 0 4px 4px;
+  text-align: center;
+}
+.receipt-savings-label {
+  font-family: var(--font-body);
+  font-size: .78rem;
+  color: var(--text-secondary);
+  margin-bottom: 4px;
+}
+.receipt-savings-amount {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: var(--amber);
+}
+
+/* Floating savings tag */
+.savings-float {
+  position: absolute;
+  right: -20px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: var(--green-deep);
+  color: white;
+  padding: 14px 20px;
+  border-radius: 14px;
+  box-shadow: var(--shadow-lg);
+  text-align: center;
+  animation: float 4s ease-in-out infinite;
+  z-index: 2;
+}
+@keyframes float {
+  0%, 100% { transform: translateY(-50%) translateX(0); }
+  50% { transform: translateY(calc(-50% - 8px)) translateX(4px); }
+}
+.savings-float-num {
+  font-family: var(--font-mono);
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+.savings-float-label {
+  font-size: .72rem;
+  opacity: .8;
+  margin-top: 2px;
+}
+
+@media (max-width: 900px) {
+  .hero .section-inner {
+    grid-template-columns: 1fr;
+    text-align: center;
+  }
+  .hero-content { max-width: 100%; }
+  .hero-sub { margin-left: auto; margin-right: auto; }
+  .hero-ctas { justify-content: center; }
+  .hero-proof { justify-content: center; }
+  .hero-visual { margin-top: 40px; }
+  .savings-float { right: -8px; }
+}
+
+/* ========== STORES BAR ========== */
+.stores-bar {
+  background: white;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  padding: 32px 24px;
+  z-index: 1;
+  position: relative;
+}
+.stores-inner {
+  max-width: 900px;
+  margin: 0 auto;
+  text-align: center;
+}
+.stores-label {
+  font-size: .82rem;
+  color: var(--text-secondary);
+  margin-bottom: 24px;
+  font-weight: 500;
+}
+.stores-logos {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 40px;
+  flex-wrap: wrap;
+}
+.store-logo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+  font-size: 1.05rem;
+  color: var(--text);
+  opacity: .7;
+  transition: opacity .3s;
+}
+.store-logo:hover { opacity: 1; }
+.store-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: .7rem;
+  font-weight: 800;
+  color: white;
+}
+
+/* ========== PROBLEM SECTION ========== */
+.problem {
+  background:
+    radial-gradient(ellipse at 70% 30%, rgba(232,160,32,.06) 0%, transparent 60%),
+    var(--bg);
+}
+.problem-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 20px;
+  margin-top: 48px;
+}
+.problem-card {
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 32px 28px;
+  transition: transform .3s, box-shadow .3s;
+}
+.problem-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-md);
+}
+.problem-num {
+  font-family: var(--font-mono);
+  font-size: 2.4rem;
+  font-weight: 700;
+  color: var(--amber);
+  line-height: 1;
+  margin-bottom: 12px;
+}
+.problem-stat {
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  color: var(--green-deep);
+  margin-bottom: 8px;
+  line-height: 1.3;
+}
+.problem-desc {
+  font-size: .88rem;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+/* ========== HOW IT WORKS ========== */
+.how {
+  background: var(--green-deep);
+  color: white;
+  overflow: hidden;
+}
+.how .section-label { color: var(--green-accent); }
+.how .section-label::before { background: var(--green-accent); }
+.how .section-title { color: white; }
+.how .section-subtitle { color: rgba(255,255,255,.65); }
+
+.how-steps {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 32px;
+  margin-top: 56px;
+}
+.how-step {
+  position: relative;
+  background: rgba(255,255,255,.06);
+  border: 1px solid rgba(255,255,255,.1);
+  border-radius: var(--radius-lg);
+  padding: 36px 28px;
+  transition: background .3s, border-color .3s;
+}
+.how-step:hover {
+  background: rgba(255,255,255,.1);
+  border-color: rgba(255,255,255,.2);
+}
+.how-step-number {
+  font-family: var(--font-mono);
+  font-size: .72rem;
+  font-weight: 700;
+  color: var(--green-accent);
+  letter-spacing: .1em;
+  margin-bottom: 20px;
+}
+.how-step-icon {
+  width: 56px;
+  height: 56px;
+  background: rgba(60,179,113,.15);
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 20px;
+  font-size: 1.5rem;
+}
+.how-step h3 {
+  font-family: var(--font-display);
+  font-size: 1.4rem;
+  margin-bottom: 10px;
+}
+.how-step p {
+  font-size: .92rem;
+  line-height: 1.65;
+  color: rgba(255,255,255,.7);
+}
+
+@media (max-width: 768px) {
+  .how-steps { grid-template-columns: 1fr; }
+}
+
+/* ========== PROOF SECTION ========== */
+.proof {
+  background: var(--bg);
+}
+.proof-cards {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 28px;
+  margin-top: 48px;
+}
+.proof-card {
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+  transition: transform .3s, box-shadow .3s;
+}
+.proof-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg);
+}
+.proof-card-header {
+  padding: 28px 28px 0;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.proof-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--green-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  color: var(--green-deep);
+  font-size: .95rem;
+}
+.proof-name {
+  font-weight: 600;
+  font-size: .95rem;
+}
+.proof-store {
+  font-size: .82rem;
+  color: var(--text-secondary);
+}
+.proof-items {
+  padding: 20px 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.proof-item {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: .85rem;
+}
+.proof-item-name {
+  flex: 1;
+  color: var(--text);
+}
+.proof-item-prices {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  white-space: nowrap;
+}
+.price-old {
+  font-family: var(--font-mono);
+  font-size: .82rem;
+  color: var(--text-secondary);
+  text-decoration: line-through;
+}
+.price-new {
+  font-family: var(--font-mono);
+  font-size: .88rem;
+  font-weight: 700;
+  color: var(--green-accent);
+}
+.proof-card-footer {
+  background: var(--green-light);
+  padding: 18px 28px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.proof-total-label {
+  font-size: .82rem;
+  color: var(--green-deep);
+  font-weight: 500;
+}
+.proof-total-amount {
+  font-family: var(--font-mono);
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--green-deep);
+}
+
+@media (max-width: 768px) {
+  .proof-cards { grid-template-columns: 1fr; }
+}
+
+/* ========== FEATURES ========== */
+.features {
+  background:
+    radial-gradient(ellipse at 30% 70%, rgba(60,179,113,.05) 0%, transparent 60%),
+    var(--bg-warm);
+}
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 20px;
+  margin-top: 48px;
+}
+.feature-card {
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 28px 24px;
+  transition: transform .3s, box-shadow .3s, border-color .3s;
+  position: relative;
+}
+.feature-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-md);
+  border-color: var(--green-accent);
+}
+.feature-icon {
+  width: 48px;
+  height: 48px;
+  background: var(--green-light);
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.3rem;
+  margin-bottom: 16px;
+}
+.feature-card h3 {
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  color: var(--green-deep);
+  margin-bottom: 8px;
+}
+.feature-card p {
+  font-size: .88rem;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+.feature-pro {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: var(--amber-light);
+  color: var(--amber);
+  font-family: var(--font-mono);
+  font-size: .65rem;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 100px;
+  letter-spacing: .05em;
+}
+
+/* ========== PRICING ========== */
+.pricing {
+  background: var(--bg);
+}
+.pricing-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  margin-top: 48px;
+  max-width: 800px;
+}
+.pricing-card {
+  background: white;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-xl);
+  padding: 40px 32px;
+  position: relative;
+  transition: transform .3s, box-shadow .3s;
+}
+.pricing-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg);
+}
+.pricing-card.pro {
+  border-color: var(--green-deep);
+  background: var(--green-deep);
+  color: white;
+}
+.pricing-popular {
+  position: absolute;
+  top: -13px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--amber);
+  color: white;
+  font-family: var(--font-mono);
+  font-size: .7rem;
+  font-weight: 700;
+  padding: 5px 18px;
+  border-radius: 100px;
+  letter-spacing: .06em;
+  white-space: nowrap;
+}
+.pricing-tier {
+  font-family: var(--font-mono);
+  font-size: .78rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .1em;
+  opacity: .6;
+  margin-bottom: 12px;
+}
+.pricing-price {
+  font-family: var(--font-display);
+  font-size: 2.8rem;
+  line-height: 1;
+  margin-bottom: 4px;
+}
+.pricing-price span {
+  font-family: var(--font-body);
+  font-size: .95rem;
+  font-weight: 400;
+  opacity: .6;
+}
+.pricing-desc {
+  font-size: .88rem;
+  opacity: .65;
+  margin-bottom: 28px;
+  line-height: 1.5;
+}
+.pricing-features {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 32px;
+}
+.pricing-features li {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: .9rem;
+  line-height: 1.5;
+}
+.pricing-features li::before {
+  content: '✓';
+  font-weight: 700;
+  color: var(--green-accent);
+  font-size: .85rem;
+  margin-top: 2px;
+  flex-shrink: 0;
+}
+.pricing-card.pro .pricing-features li::before { color: var(--amber); }
+.pricing-btn {
+  display: block;
+  width: 100%;
+  text-align: center;
+  padding: 15px;
+  border-radius: 14px;
+  font-weight: 600;
+  font-size: .95rem;
+  transition: transform .2s, box-shadow .2s;
+}
+.pricing-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+.pricing-card:not(.pro) .pricing-btn {
+  background: var(--green-deep);
+  color: white;
+}
+.pricing-card.pro .pricing-btn {
+  background: white;
+  color: var(--green-deep);
+}
+.pricing-note {
+  font-size: .78rem;
+  text-align: center;
+  opacity: .55;
+  margin-top: 12px;
+  font-style: italic;
+}
+
+@media (max-width: 640px) {
+  .pricing-grid { grid-template-columns: 1fr; }
+}
+
+/* ========== FAQ ========== */
+.faq {
+  background: var(--bg-warm);
+}
+.faq-list {
+  max-width: 720px;
+  margin-top: 48px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.faq-item {
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  transition: border-color .3s;
+}
+.faq-item:hover, .faq-item.open {
+  border-color: var(--green-accent);
+}
+.faq-question {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  background: none;
+  padding: 20px 24px;
+  font-size: .95rem;
+  font-weight: 600;
+  color: var(--green-deep);
+  text-align: left;
+  gap: 16px;
+  transition: background .2s;
+}
+.faq-question:hover { background: rgba(60,179,113,.03); }
+.faq-chevron {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  transition: transform .3s;
+  color: var(--green-accent);
+}
+.faq-item.open .faq-chevron { transform: rotate(180deg); }
+.faq-answer {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height .4s cubic-bezier(.22,1,.36,1), padding .3s;
+}
+.faq-item.open .faq-answer {
+  max-height: 300px;
+}
+.faq-answer-inner {
+  padding: 0 24px 20px;
+  font-size: .9rem;
+  color: var(--text-secondary);
+  line-height: 1.7;
+}
+
+/* ========== FINAL CTA ========== */
+.final-cta {
+  background:
+    radial-gradient(ellipse at 50% 50%, rgba(60,179,113,.12) 0%, transparent 70%),
+    var(--green-deep);
+  color: white;
+  text-align: center;
+  padding: 100px 24px 80px;
+}
+.final-cta .section-title {
+  color: white;
+  max-width: 600px;
+  margin: 0 auto 16px;
+}
+.final-cta-sub {
+  font-size: 1.1rem;
+  color: rgba(255,255,255,.65);
+  max-width: 480px;
+  margin: 0 auto 40px;
+}
+.final-cta-buttons {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-bottom: 32px;
+}
+.btn-app {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  background: white;
+  color: var(--green-deep);
+  padding: 14px 28px;
+  border-radius: 14px;
+  font-weight: 600;
+  font-size: .95rem;
+  transition: transform .2s, box-shadow .2s;
+}
+.btn-app:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
+.btn-app svg { width: 24px; height: 24px; }
+.final-trust {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  flex-wrap: wrap;
+  font-size: .85rem;
+  color: rgba(255,255,255,.55);
+}
+.final-trust span {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* ========== FOOTER ========== */
+.footer {
+  background: #111;
+  color: rgba(255,255,255,.5);
+  padding: 48px 24px;
+  position: relative;
+  z-index: 1;
+}
+.footer-inner {
+  max-width: 1100px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+.footer-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.footer-logo {
+  width: 30px;
+  height: 30px;
+  background: var(--green-deep);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-family: var(--font-mono);
+  font-size: .7rem;
+  font-weight: 700;
+}
+.footer-links {
+  display: flex;
+  gap: 24px;
+  list-style: none;
+  font-size: .85rem;
+}
+.footer-links a:hover { color: rgba(255,255,255,.8); }
+.footer-made {
+  font-size: .85rem;
+}
+
+@media (max-width: 640px) {
+  .footer-inner {
+    flex-direction: column;
+    text-align: center;
+  }
+}
+
+/* ========== ANIMATED COUNTER ========== */
+.counter {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ========== SAVING TICKER ========== */
+.ticker-bar {
+  background: var(--amber-light);
+  padding: 12px 24px;
+  text-align: center;
+  font-size: .85rem;
+  color: var(--amber);
+  font-weight: 600;
+  position: relative;
+  z-index: 1;
+  overflow: hidden;
+}
+.ticker-bar span {
+  font-family: var(--font-mono);
+}
+.store-logo-img {
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+  border-radius: 8px;
+  transition: transform .3s;
+}
+.store-logo:hover .store-logo-img {
+  transform: scale(1.1);
+}
+.how-step-icon svg {
+  width: 48px;
+  height: 48px;
+}
+.feature-icon svg {
+  width: 32px;
+  height: 32px;
+}
+</style>
+</head>
+<body>
+
+<!-- ===== NAVIGATION ===== -->
+<nav class="nav" id="nav">
+  <div class="nav-inner">
+    <a href="#" class="nav-logo">
+      <div class="nav-logo-icon">SD</div>
+      SmartDocket
+    </a>
+    <ul class="nav-links" id="navLinks">
+      <li><a href="#how">How it works</a></li>
+      <li><a href="#proof">Real savings</a></li>
+      <li><a href="#features">Features</a></li>
+      <li><a href="#pricing">Pricing</a></li>
+      <li><a href="#faq">FAQ</a></li>
+      <li><a href="https://apps.apple.com/smartdocket" class="nav-cta">Download Free</a></li>
+    </ul>
+    <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Toggle menu">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</nav>
+
+<!-- ===== HERO ===== -->
+<section class="section hero">
+  <div class="section-inner">
+    <div class="hero-content">
+      <div class="hero-badge reveal">
+        <span class="hero-badge-dot"></span>
+        3,700+ products tracked live
+      </div>
+      <h1 class="reveal reveal-delay-1">Your receipt knows where you <em>overpaid.</em></h1>
+      <p class="hero-sub reveal reveal-delay-2">SmartDocket compares prices across Tesco, Lidl, Aldi, SuperValu and Dunnes — so you always know where the deals are.</p>
+      <div class="hero-ctas reveal reveal-delay-3">
+        <a href="https://apps.apple.com/smartdocket" class="btn-primary">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+          Download Free
+        </a>
+        <a href="#how" class="btn-secondary">See how it works</a>
+      </div>
+      <div class="hero-proof reveal reveal-delay-4">
+        <div class="hero-proof-avatars">
+          <span style="background:#3CB371">S</span>
+          <span style="background:#E8A020">M</span>
+          <span style="background:#1A4D35">C</span>
+          <span style="background:#6B7280">R</span>
+        </div>
+        Join 500+ Irish shoppers saving €40+/month
+      </div>
+    </div>
+    <div class="hero-visual reveal reveal-delay-2">
+      <div class="receipt-card">
+        <div class="receipt-header">
+          <div class="receipt-store">Tesco — Rathmines</div>
+          <div class="receipt-date">26 Mar 2026 • 14:32</div>
+        </div>
+        <div class="receipt-item">
+          <span class="receipt-item-name">Dr Oetker Pizza</span>
+          <span class="receipt-item-price overpaid">€4.25</span>
+        </div>
+        <div style="text-align:right">
+          <span class="receipt-item-better">↓ €3.49 at Lidl</span>
+        </div>
+        <div class="receipt-item">
+          <span class="receipt-item-name">Nescafé Pods 16pk</span>
+          <span class="receipt-item-price overpaid">€6.80</span>
+        </div>
+        <div style="text-align:right">
+          <span class="receipt-item-better">↓ €5.00 Clubcard</span>
+        </div>
+        <div class="receipt-item">
+          <span class="receipt-item-name">Tayto 15-Pack</span>
+          <span class="receipt-item-price overpaid">€6.50</span>
+        </div>
+        <div style="text-align:right">
+          <span class="receipt-item-better">↓ €5.99 SuperValu</span>
+        </div>
+        <div class="receipt-item">
+          <span class="receipt-item-name">Avonmore Milk 2L</span>
+          <span class="receipt-item-price overpaid">€2.15</span>
+        </div>
+        <div style="text-align:right">
+          <span class="receipt-item-better">↓ €1.69 at Aldi</span>
+        </div>
+        <hr class="receipt-divider">
+        <div class="receipt-total">
+          <span>TOTAL PAID</span>
+          <span>€47.82</span>
+        </div>
+        <div class="receipt-savings">
+          <div class="receipt-savings-label">SmartDocket found</div>
+          <div class="receipt-savings-amount">€8.40 in savings</div>
+        </div>
+      </div>
+      <div class="savings-float">
+        <div class="savings-float-num">€680</div>
+        <div class="savings-float-label">saved / year</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== STORES BAR ===== -->
+<div class="stores-bar reveal">
+  <div class="stores-inner">
+    <div class="stores-label">Comparing prices across Ireland's 5 major supermarkets</div>
+    <div class="stores-logos">
+      <div class="store-logo">
+        <img src="public/logos/tesco.png" alt="Tesco" class="store-logo-img">
+        Tesco
+      </div>
+      <div class="store-logo">
+        <img src="public/logos/lidl.png" alt="Lidl" class="store-logo-img">
+        Lidl
+      </div>
+      <div class="store-logo">
+        <img src="public/logos/aldi.png" alt="Aldi" class="store-logo-img">
+        Aldi
+      </div>
+      <div class="store-logo">
+        <img src="public/logos/supervalu.png" alt="SuperValu" class="store-logo-img">
+        SuperValu
+      </div>
+      <div class="store-logo">
+        <img src="public/logos/dunnes.png" alt="Dunnes" class="store-logo-img">
+        Dunnes
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== SAVINGS TICKER ===== -->
+<div class="ticker-bar">
+  <span class="counter" id="savingsCounter">€12,847</span> saved by SmartDocket users this month — and counting
+</div>
+
+<!-- ===== PROBLEM ===== -->
+<section class="section problem" id="problem">
+  <div class="section-inner">
+    <span class="section-label reveal">The reality</span>
+    <h2 class="section-title reveal">You're spending more than you need to.</h2>
+    <p class="section-subtitle reveal">We've all done it — same basket, same store, every week, without thinking twice. But the numbers tell a different story.</p>
+    <div class="problem-grid">
+      <div class="problem-card reveal">
+        <div class="problem-num counter">€12k</div>
+        <div class="problem-stat">Average annual grocery spend</div>
+        <div class="problem-desc">Irish families spend about €12,000 a year on food. That's your second biggest expense after housing.</div>
+      </div>
+      <div class="problem-card reveal reveal-delay-1">
+        <div class="problem-num">15–30%</div>
+        <div class="problem-stat">Price gap on the same products</div>
+        <div class="problem-desc">The same item can cost 15–30% more depending on which store you walk into. Every week, that adds up.</div>
+      </div>
+      <div class="problem-card reveal reveal-delay-2">
+        <div class="problem-num counter">€2,400</div>
+        <div class="problem-stat">Potential yearly savings</div>
+        <div class="problem-desc">That's a holiday. Or three months of electricity. Or just breathing room. All hidden in your receipts.</div>
+      </div>
+      <div class="problem-card reveal reveal-delay-3">
+        <div class="problem-num">5</div>
+        <div class="problem-stat">Stores nobody has time to check</div>
+        <div class="problem-desc">Who has the time to compare leaflets from five different supermarkets? Nobody. That's why we built SmartDocket.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== HOW IT WORKS ===== -->
+<section class="section how" id="how">
+  <div class="section-inner">
+    <span class="section-label reveal">How it works</span>
+    <h2 class="section-title reveal">Three seconds. That's all it takes.</h2>
+    <p class="section-subtitle reveal">No leaflets. No spreadsheets. No driving around town. Just scan and save.</p>
+    <div class="how-steps">
+      <div class="how-step reveal">
+        <div class="how-step-number">STEP 01</div>
+        <div class="how-step-icon"><svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="4" y="12" width="40" height="28" rx="4" stroke="#1A4D35" stroke-width="2.5"/><circle cx="24" cy="26" r="8" stroke="#1A4D35" stroke-width="2.5"/><circle cx="24" cy="26" r="4" fill="#3CB371" opacity=".3"/><path d="M16 12L18 6H30L32 12" stroke="#1A4D35" stroke-width="2.5" stroke-linecap="round"/><circle cx="36" cy="18" r="2" fill="#3CB371"/></svg></div>
+        <h3>Scan</h3>
+        <p>Take a photo of any receipt. Our AI reads it in seconds — even crumpled, faded, or ridiculously long ones. Multi-photo? No problem.</p>
+      </div>
+      <div class="how-step reveal reveal-delay-1">
+        <div class="how-step-number">STEP 02</div>
+        <div class="how-step-icon"><svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="4" y="4" width="24" height="32" rx="3" stroke="#1A4D35" stroke-width="2.5"/><line x1="9" y1="12" x2="23" y2="12" stroke="#1A4D35" stroke-width="2" stroke-linecap="round"/><line x1="9" y1="18" x2="20" y2="18" stroke="#1A4D35" stroke-width="2" stroke-linecap="round"/><line x1="9" y1="24" x2="17" y2="24" stroke="#1A4D35" stroke-width="2" stroke-linecap="round"/><line x1="22" y1="24" x2="23" y2="24" stroke="#3CB371" stroke-width="2.5" stroke-linecap="round"/><path d="M28 4L28 36H40C42.2 36 44 34.2 44 32V8C44 5.8 42.2 4 40 4H28Z" stroke="#3CB371" stroke-width="2.5"/><line x1="33" y1="12" x2="39" y2="12" stroke="#3CB371" stroke-width="2" stroke-linecap="round"/><line x1="33" y1="18" x2="39" y2="18" stroke="#3CB371" stroke-width="2" stroke-linecap="round"/><line x1="33" y1="24" x2="39" y2="24" stroke="#3CB371" stroke-width="2" stroke-linecap="round"/><path d="M15 28L20 33" stroke="#E8A020" stroke-width="2.5" stroke-linecap="round"/></svg></div>
+        <h3>Compare</h3>
+        <p>See instantly where every item is cheaper — across all five stores. Real prices, updated every two days, not guesses.</p>
+      </div>
+      <div class="how-step reveal reveal-delay-2">
+        <div class="how-step-number">STEP 03</div>
+        <div class="how-step-icon"><svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="24" cy="24" r="18" stroke="#1A4D35" stroke-width="2.5"/><path d="M24 10V38" stroke="#3CB371" stroke-width="2" stroke-linecap="round"/><path d="M18 18C18 15 20.7 13 24 13C27.3 13 30 15 30 18C30 21 27 22 24 22C21 22 18 23 18 26C18 29 20.7 31 24 31C27.3 31 30 29 30 26" stroke="#1A4D35" stroke-width="2.5" stroke-linecap="round"/><path d="M10 32L16 26" stroke="#E8A020" stroke-width="2" stroke-linecap="round"/><path d="M8 28L12 28" stroke="#E8A020" stroke-width="2" stroke-linecap="round"/><path d="M10 24L10 28" stroke="#E8A020" stroke-width="2" stroke-linecap="round"/></svg></div>
+        <h3>Save</h3>
+        <p>Get personalised deals, optimise your next shop with our basket splitter, and watch your monthly savings grow in real time.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== PROOF ===== -->
+<section class="section proof" id="proof">
+  <div class="section-inner">
+    <span class="section-label reveal">Real savings</span>
+    <h2 class="section-title reveal">Real receipts. Real numbers.</h2>
+    <p class="section-subtitle reveal">These aren't projections. These are savings found on actual Irish grocery shops.</p>
+    <div class="proof-cards">
+      <div class="proof-card reveal">
+        <div class="proof-card-header">
+          <div class="proof-avatar">S</div>
+          <div>
+            <div class="proof-name">Sarah's Tesco Receipt</div>
+            <div class="proof-store">Tesco Rathmines, 22 March</div>
+          </div>
+        </div>
+        <div class="proof-items">
+          <div class="proof-item">
+            <span class="proof-item-name">Dr. Oetker Pizza</span>
+            <div class="proof-item-prices">
+              <span class="price-old">€4.25</span>
+              <span class="price-new">€3.49 Lidl</span>
+            </div>
+          </div>
+          <div class="proof-item">
+            <span class="proof-item-name">Nescafé Coffee Pods</span>
+            <div class="proof-item-prices">
+              <span class="price-old">€6.80</span>
+              <span class="price-new">€5.00 Clubcard</span>
+            </div>
+          </div>
+          <div class="proof-item">
+            <span class="proof-item-name">Tayto Crisps 15-pk</span>
+            <div class="proof-item-prices">
+              <span class="price-old">€6.50</span>
+              <span class="price-new">€5.99 SuperValu</span>
+            </div>
+          </div>
+          <div class="proof-item">
+            <span class="proof-item-name">Fairy Liquid Original</span>
+            <div class="proof-item-prices">
+              <span class="price-old">€3.20</span>
+              <span class="price-new">€2.49 Aldi</span>
+            </div>
+          </div>
+        </div>
+        <div class="proof-card-footer">
+          <span class="proof-total-label">Savings found</span>
+          <span class="proof-total-amount">€4.78</span>
+        </div>
+      </div>
+
+      <div class="proof-card reveal reveal-delay-1">
+        <div class="proof-card-header">
+          <div class="proof-avatar" style="background:var(--amber-light);color:var(--amber)">M</div>
+          <div>
+            <div class="proof-name">Mark's Smart Split</div>
+            <div class="proof-store">Weekly shop optimised</div>
+          </div>
+        </div>
+        <div class="proof-items">
+          <div class="proof-item">
+            <span class="proof-item-name">Dairy → Lidl</span>
+            <div class="proof-item-prices">
+              <span class="price-new" style="color:var(--green-accent)">save €3.20</span>
+            </div>
+          </div>
+          <div class="proof-item">
+            <span class="proof-item-name">Snacks → Tesco (Clubcard)</span>
+            <div class="proof-item-prices">
+              <span class="price-new" style="color:var(--green-accent)">save €4.10</span>
+            </div>
+          </div>
+          <div class="proof-item">
+            <span class="proof-item-name">Meat → Aldi</span>
+            <div class="proof-item-prices">
+              <span class="price-new" style="color:var(--green-accent)">save €5.80</span>
+            </div>
+          </div>
+          <div class="proof-item">
+            <span class="proof-item-name">Household → Dunnes</span>
+            <div class="proof-item-prices">
+              <span class="price-new" style="color:var(--green-accent)">save €2.40</span>
+            </div>
+          </div>
+        </div>
+        <div class="proof-card-footer" style="background:var(--amber-light)">
+          <span class="proof-total-label" style="color:var(--amber)">Weekly savings</span>
+          <span class="proof-total-amount" style="color:var(--amber)">€15.50 /wk</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== FEATURES ===== -->
+<section class="section features" id="features">
+  <div class="section-inner">
+    <span class="section-label reveal">Features</span>
+    <h2 class="section-title reveal">More than a receipt scanner.</h2>
+    <p class="section-subtitle reveal">Everything you need to never overpay again — in your pocket.</p>
+    <div class="features-grid">
+      <div class="feature-card reveal">
+        <div class="feature-icon"><svg viewBox="0 0 32 32" fill="none"><circle cx="14" cy="14" r="9" stroke="#1A4D35" stroke-width="2.5"/><path d="M21 21L28 28" stroke="#3CB371" stroke-width="2.5" stroke-linecap="round"/></svg></div>
+        <h3>Smart Search</h3>
+        <p>Type any product, see prices across all 5 stores instantly. Find the best deal before you leave the house.</p>
+      </div>
+      <div class="feature-card reveal reveal-delay-1">
+        <div class="feature-icon"><svg viewBox="0 0 32 32" fill="none"><circle cx="16" cy="16" r="12" stroke="#1A4D35" stroke-width="2"/><circle cx="16" cy="16" r="7" stroke="#3CB371" stroke-width="2"/><circle cx="16" cy="16" r="2.5" fill="#E8A020"/></svg></div>
+        <h3>Personal Deals</h3>
+        <p>AI learns what you actually buy and surfaces relevant offers — not random promotions you'll never use.</p>
+      </div>
+      <div class="feature-card reveal reveal-delay-2">
+        <div class="feature-icon"><svg viewBox="0 0 32 32" fill="none"><rect x="4" y="18" width="6" height="10" rx="1.5" fill="#3CB371" opacity=".4"/><rect x="13" y="12" width="6" height="16" rx="1.5" fill="#1A4D35" opacity=".6"/><rect x="22" y="6" width="6" height="22" rx="1.5" fill="#3CB371"/><path d="M4 8L14 4L22 10L28 6" stroke="#E8A020" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <h3>Price History</h3>
+        <p>Track prices over time. Know if that "special offer" is actually special, or just last month's normal price.</p>
+      </div>
+      <div class="feature-card reveal reveal-delay-3">
+        <div class="feature-icon"><svg viewBox="0 0 32 32" fill="none"><path d="M6 6H8L12 22H26" stroke="#1A4D35" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M10 10H28L25 18H12" stroke="#1A4D35" stroke-width="2.5" stroke-linejoin="round"/><circle cx="14" cy="26" r="2" fill="#3CB371"/><circle cx="24" cy="26" r="2" fill="#3CB371"/></svg></div>
+        <h3>Shopping List</h3>
+        <p>Add items, and we tell you which store combination saves the most. Smart splitting, zero hassle.</p>
+      </div>
+      <div class="feature-card reveal">
+        <div class="feature-icon"><svg viewBox="0 0 32 32" fill="none"><path d="M4 8C4 6 6 4 8 4H24C26 4 28 6 28 8V18C28 20 26 22 24 22H12L6 28V22H8" stroke="#1A4D35" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="13" r="1.5" fill="#3CB371"/><circle cx="17" cy="13" r="1.5" fill="#3CB371"/><circle cx="22" cy="13" r="1.5" fill="#3CB371"/></svg></div>
+        <h3>AI Assistant</h3>
+        <p>"What's the cheapest way to make lasagna this week?" Just ask. It knows the prices, you get the answer.</p>
+        <span class="feature-pro">PRO</span>
+      </div>
+      <div class="feature-card reveal reveal-delay-1">
+        <div class="feature-icon"><svg viewBox="0 0 32 32" fill="none"><path d="M18 4L8 18H16L14 28L24 14H16L18 4Z" fill="#E8A020" stroke="#1A4D35" stroke-width="2" stroke-linejoin="round"/></svg></div>
+        <h3>Golden Deals</h3>
+        <p>Products 25%+ below their average price — the rare finds that save the most. We flag them so you don't miss out.</p>
+        <span class="feature-pro">PRO</span>
+      </div>
+      <div class="feature-card reveal reveal-delay-2">
+        <div class="feature-icon"><svg viewBox="0 0 32 32" fill="none"><path d="M24 12A8 8 0 0 0 8 12C8 20 4 22 4 22H28S24 20 24 12Z" stroke="#1A4D35" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M13.7 26A2 2 0 0 0 18.3 26" stroke="#3CB371" stroke-width="2.5" stroke-linecap="round"/></svg></div>
+        <h3>Smart Alerts</h3>
+        <p>Get notified when your regular items drop in price. Buy at the right time, not just the usual time.</p>
+        <span class="feature-pro">PRO</span>
+      </div>
+      <div class="feature-card reveal reveal-delay-3">
+        <div class="feature-icon"><svg viewBox="0 0 32 32" fill="none"><rect x="8" y="2" width="16" height="28" rx="3" stroke="#1A4D35" stroke-width="2.5"/><line x1="14" y1="26" x2="18" y2="26" stroke="#3CB371" stroke-width="2" stroke-linecap="round"/><rect x="11" y="8" width="10" height="6" rx="1" fill="#3CB371" opacity=".2"/><rect x="11" y="16" width="10" height="2" rx="1" fill="#1A4D35" opacity=".15"/></svg></div>
+        <h3>Multi-Photo Scan</h3>
+        <p>Long receipt? Take 2–5 photos, we stitch them together automatically. Works with crumpled paper too.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== PRICING ===== -->
+<section class="section pricing" id="pricing">
+  <div class="section-inner">
+    <span class="section-label reveal">Pricing</span>
+    <h2 class="section-title reveal">Start free. Upgrade when you're ready.</h2>
+    <p class="section-subtitle reveal">No tricks, no lock-in. Cancel anytime.</p>
+    <div class="pricing-grid">
+      <div class="pricing-card reveal">
+        <div class="pricing-tier">Free</div>
+        <div class="pricing-price">€0 <span>forever</span></div>
+        <div class="pricing-desc">Perfect for trying it out and seeing real savings.</div>
+        <ul class="pricing-features">
+          <li>10 receipt scans per month</li>
+          <li>Price comparison across all 5 stores</li>
+          <li>Weekly deals</li>
+          <li>Shopping list</li>
+          <li>Smart Search</li>
+        </ul>
+        <a href="https://apps.apple.com/smartdocket" class="pricing-btn">Start Free</a>
+      </div>
+      <div class="pricing-card pro reveal reveal-delay-1">
+        <div class="pricing-popular">MOST POPULAR</div>
+        <div class="pricing-tier">Pro</div>
+        <div class="pricing-price">€4.99 <span>/month</span></div>
+        <div class="pricing-desc">Pays for itself after one shop. Seriously.</div>
+        <ul class="pricing-features">
+          <li>Everything in Free</li>
+          <li>Unlimited receipt scans</li>
+          <li>AI chat assistant</li>
+          <li>Golden Deals (25%+ savings)</li>
+          <li>Smart timing alerts</li>
+          <li>Basket optimizer</li>
+          <li>Priority support</li>
+        </ul>
+        <a href="https://apps.apple.com/smartdocket" class="pricing-btn">Go Pro</a>
+        <div class="pricing-note">That's less than a coffee. You'll save 10× that in your first week.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== FAQ ===== -->
+<section class="section faq" id="faq">
+  <div class="section-inner">
+    <span class="section-label reveal">FAQ</span>
+    <h2 class="section-title reveal">Common questions</h2>
+    <div class="faq-list">
+      <div class="faq-item reveal">
+        <button class="faq-question">
+          Which stores do you cover?
+          <svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="faq-answer">
+          <div class="faq-answer-inner">Tesco, Lidl, Aldi, SuperValu, and Dunnes Stores — all five major Irish supermarkets. We're tracking 3,700+ products across these stores with prices updated every 2 days.</div>
+        </div>
+      </div>
+      <div class="faq-item reveal reveal-delay-1">
+        <button class="faq-question">
+          How accurate are the prices?
+          <svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="faq-answer">
+          <div class="faq-answer-inner">We update prices every 2 days from official store data. Receipt scans are read by AI with 98%+ accuracy. We use embedding-based matching so we find "Milk 2L" even when stores label it differently.</div>
+        </div>
+      </div>
+      <div class="faq-item reveal reveal-delay-2">
+        <button class="faq-question">
+          Is my data safe?
+          <svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="faq-answer">
+          <div class="faq-answer-inner">Your receipts are processed securely and never shared. We don't sell your data. Period. We use encryption in transit and at rest, and we comply with GDPR.</div>
+        </div>
+      </div>
+      <div class="faq-item reveal">
+        <button class="faq-question">
+          Does it work with any receipt?
+          <svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="faq-answer">
+          <div class="faq-answer-inner">Any paper receipt from the 5 supported stores. Crumpled, faded, long — our AI handles it all. You can even take multiple photos of extra-long receipts and we stitch them together automatically.</div>
+        </div>
+      </div>
+      <div class="faq-item reveal reveal-delay-1">
+        <button class="faq-question">
+          How much can I actually save?
+          <svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="faq-answer">
+          <div class="faq-answer-inner">Most users find €5–15 savings per weekly shop. That's €260–780 per year. Users who also use the basket optimizer and smart timing alerts often save over €40/month. The Pro plan pays for itself many times over.</div>
+        </div>
+      </div>
+      <div class="faq-item reveal reveal-delay-2">
+        <button class="faq-question">
+          Can I cancel Pro anytime?
+          <svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="faq-answer">
+          <div class="faq-answer-inner">Yes. Cancel anytime from the app. No lock-in, no hassle, no guilt trips. Your data stays yours even after cancelling.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== FINAL CTA ===== -->
+<section class="final-cta">
+  <span class="section-label reveal" style="justify-content:center">Get started</span>
+  <h2 class="section-title reveal">Your next shop starts here.</h2>
+  <p class="final-cta-sub reveal">Join thousands of Irish families who refuse to overpay for groceries.</p>
+  <div class="final-cta-buttons reveal reveal-delay-1">
+    <a href="https://apps.apple.com/smartdocket" class="btn-app">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
+      App Store
+    </a>
+    <a href="https://play.google.com/store/apps/details?id=com.smartdocket" class="btn-app">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M3.18 23.04c-.32-.17-.58-.47-.58-.9V1.86c0-.43.26-.73.58-.9l10.88 11.04L3.18 23.04zm14.54-8.37l-2.75 2.75L5.3 21.4 14.72 12l3 2.67zm.69-3.34L16 12l3.4-3.03 2.14 1.23c.64.36.64 1.24 0 1.6l-3.13 1.53zM5.3 2.6l9.67 3.98-2.91 2.91L5.3 2.6z"/></svg>
+      Google Play
+    </a>
+  </div>
+  <div class="final-trust reveal reveal-delay-2">
+    <span>✓ Free to start</span>
+    <span>✓ No credit card needed</span>
+    <span>✓ Works with all 5 stores</span>
+  </div>
+</section>
+
+<!-- ===== FOOTER ===== -->
+<footer class="footer">
+  <div class="footer-inner">
+    <div class="footer-brand">
+      <div class="footer-logo">SD</div>
+      <span>SmartDocket</span>
+    </div>
+    <ul class="footer-links">
+      <li><a href="#">Privacy Policy</a></li>
+      <li><a href="#">Terms of Service</a></li>
+      <li><a href="#">Contact</a></li>
+    </ul>
+    <div class="footer-made">Made in Ireland 🇮🇪 &nbsp;·&nbsp; © 2026 SmartDocket</div>
+  </div>
+</footer>
+
+<script>
+/* ===== Scroll Reveal ===== */
+const revealElements = document.querySelectorAll('.reveal');
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.classList.add('visible');
+    }
+  });
+}, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+revealElements.forEach(el => observer.observe(el));
+
+/* ===== Sticky Nav ===== */
+const nav = document.getElementById('nav');
+let lastScroll = 0;
+window.addEventListener('scroll', () => {
+  nav.classList.toggle('scrolled', window.scrollY > 40);
+}, { passive: true });
+
+/* ===== Mobile Menu ===== */
+const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+const navLinks = document.getElementById('navLinks');
+mobileMenuBtn.addEventListener('click', () => {
+  navLinks.classList.toggle('open');
+  const spans = mobileMenuBtn.querySelectorAll('span');
+  if (navLinks.classList.contains('open')) {
+    spans[0].style.transform = 'rotate(45deg) translate(5px, 5px)';
+    spans[1].style.opacity = '0';
+    spans[2].style.transform = 'rotate(-45deg) translate(5px, -5px)';
+  } else {
+    spans[0].style.transform = '';
+    spans[1].style.opacity = '1';
+    spans[2].style.transform = '';
+  }
+});
+
+// Close menu when clicking a link
+navLinks.querySelectorAll('a').forEach(link => {
+  link.addEventListener('click', () => {
+    navLinks.classList.remove('open');
+    const spans = mobileMenuBtn.querySelectorAll('span');
+    spans[0].style.transform = '';
+    spans[1].style.opacity = '1';
+    spans[2].style.transform = '';
+  });
+});
+
+/* ===== FAQ Accordion ===== */
+document.querySelectorAll('.faq-question').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const item = btn.parentElement;
+    const isOpen = item.classList.contains('open');
+    // Close all
+    document.querySelectorAll('.faq-item').forEach(i => i.classList.remove('open'));
+    // Toggle current
+    if (!isOpen) item.classList.add('open');
+  });
+});
+
+/* ===== Savings Counter Animation ===== */
+const counterEl = document.getElementById('savingsCounter');
+let counterValue = 12847;
+function updateCounter() {
+  counterValue += Math.floor(Math.random() * 3) + 1;
+  counterEl.textContent = '€' + counterValue.toLocaleString('en-IE');
+}
+setInterval(updateCounter, 4000);
+
+/* ===== Smooth scroll for anchor links ===== */
+document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+  anchor.addEventListener('click', function (e) {
+    const target = document.querySelector(this.getAttribute('href'));
+    if (target) {
+      e.preventDefault();
+      target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  });
+});
+</script>
+
+</body>
+</html>
