@@ -112,24 +112,10 @@ body::before {
 .nav-logo {
   display: flex;
   align-items: center;
-  gap: 10px;
-  font-family: var(--font-display);
-  font-size: 1.35rem;
-  color: var(--green-deep);
-  letter-spacing: -.02em;
 }
-.nav-logo-icon {
-  width: 36px;
+.nav-wordmark {
   height: 36px;
-  background: var(--green-deep);
-  border-radius: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  font-family: var(--font-mono);
-  font-size: .85rem;
-  font-weight: 700;
+  width: auto;
 }
 .nav-links {
   display: flex;
@@ -1107,20 +1093,10 @@ body::before {
 .footer-brand {
   display: flex;
   align-items: center;
-  gap: 10px;
 }
-.footer-logo {
-  width: 30px;
+.footer-wordmark {
   height: 30px;
-  background: var(--green-deep);
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  font-family: var(--font-mono);
-  font-size: .7rem;
-  font-weight: 700;
+  width: auto;
 }
 .footer-links {
   display: flex;
@@ -1187,8 +1163,7 @@ body::before {
 <nav class="nav" id="nav">
   <div class="nav-inner">
     <a href="#" class="nav-logo">
-      <div class="nav-logo-icon">SD</div>
-      SmartDocket
+      <img src="public/wordmark.png" alt="SmartDocket" class="nav-wordmark">
     </a>
     <ul class="nav-links" id="navLinks">
       <li><a href="#how">How it works</a></li>
@@ -1659,8 +1634,7 @@ body::before {
 <footer class="footer">
   <div class="footer-inner">
     <div class="footer-brand">
-      <div class="footer-logo">SD</div>
-      <span>SmartDocket</span>
+      <img src="public/wordmark-white.png" alt="SmartDocket" class="footer-wordmark">
     </div>
     <ul class="footer-links">
       <li><a href="#">Privacy Policy</a></li>
