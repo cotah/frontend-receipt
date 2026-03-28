@@ -699,6 +699,12 @@ body::before {
   color: var(--green-deep);
   font-size: .95rem;
 }
+.proof-avatar-img {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  object-fit: cover;
+}
 .proof-name {
   font-weight: 600;
   font-size: .95rem;
@@ -1356,7 +1362,7 @@ body::before {
     <div class="proof-cards">
       <div class="proof-card reveal">
         <div class="proof-card-header">
-          <div class="proof-avatar">S</div>
+          <img src="public/sarah.png" alt="Sarah" class="proof-avatar-img">
           <div>
             <div class="proof-name">Sarah's Tesco Receipt</div>
             <div class="proof-store">Tesco Rathmines, 22 March</div>
@@ -1400,7 +1406,7 @@ body::before {
 
       <div class="proof-card reveal reveal-delay-1">
         <div class="proof-card-header">
-          <div class="proof-avatar" style="background:var(--amber-light);color:var(--amber)">M</div>
+          <img src="public/mark.png" alt="Mark" class="proof-avatar-img">
           <div>
             <div class="proof-name">Mark's Smart Split</div>
             <div class="proof-store">Weekly shop optimised</div>
